@@ -1,0 +1,88 @@
+install.packages("piecewiseSEM")
+library(piecewiseSEM)
+library(nlme)
+
+data("keeley")
+head(keeley)
+?keeley
+
+Data = read.csv(file = "Keeley-2006.csv")
+names(Data)
+head(Data)
+
+# fit SEM using piecewiseSEM
+
+model1 = psem (
+  lme(rich ~ elev + abiotic + age + firesev + cover,
+      random = ~1|Plot, data = Data),
+  lme (abiotic ~ elev + age + firesev + cover,
+       random = ~1|Plot, data = Data),
+  lme (cover ~ age + firesev,
+       random = ~1|Plot, data = Data)
+  )
+
+summary(model1)
+
+model2 = psem (
+  lme(rich ~ elev + abiotic + age + firesev + cover,
+      random = ~1|Plot, data = Data),
+  lme (abiotic ~ elev + age + firesev + cover,
+       random = ~1|Plot, data = Data),
+  lme (cover ~ age + firesev + elev,
+       random = ~1|Plot, data = Data)
+)
+
+summary(model2)
+
+
+#######
+
+# fit SEM using lavaan
+install.packages("lavaan")
+library(lavaan)
+install.packages("lavaanPlot")
+library(lavaanPlot)
+
+fit =  '
+      rich ~ elev + abiotic + age + firesev + cover
+      abiotic ~ elev + age + firesev + cover
+      cover ~ age + firesev + elev'
+
+model.fit = sem (fit, data = Data ) #estimator: ML
+model.fit1 = sem (fit, data = Data, estimator = 'GLS') #estimator: ML
+
+summary(model.fit, fit.measures = TRUE, standardized = TRUE) # Std.all: standardized regression coefficients
+summary(model.fit1, fit.measures = TRUE, standardized = TRUE)
+
+
+fitMeasures(model.fit, c("cfi", "rmsea", "srmr", "GFI")) #cfi and GFI > 0.95; rmsea and srmr < 0.08
+modificationindices(model.fit, minimum.value = 5)
+
+
+fitMeasures(model.fit1, c("cfi", "rmsea", "srmr", "GFI")) #cfi and GFI > 0.95; rmsea and srmr < 0.08
+modificationindices(model.fit1, minimum.value = 5)
+
+
+anova(model.fit, model.fit1)
+
+lavaanPlot(model = model.fit, coefs = TRUE, stand = TRUE, 
+           sig = 0.05) #standardized regression paths, showing only paths with p<= .05
+
+
+lavaanPlot(model = model.fit1, coefs = TRUE, stand = TRUE, 
+          sig = 0.05) #standardized regression paths, showing only paths with p<= .05
+
+?lavaanPlot
+
+## lavaan model fit measure
+
+fitMeasures(model.fit, c("cfi", "rmsea", "srmr", "GFI")) #cfi and GFI > 0.95; rmsea and srmr < 0.08
+
+fitMeasures(model.fit1, c("cfi", "rmsea", "srmr", "GFI")) #cfi and GFI > 0.95; rmsea and srmr < 0.08
+
+fitMeasures(model.fit)
+fitMeasures(model.fit1)
+
+
+fitMeasures(model.fit, c("cfi", "rmsea", "srmr", "GFI")) #cfi and GFI > 0.95; rmsea and srmr < 0.08
+modificationindices(model.fit, minimum.value = 5)
